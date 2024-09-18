@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "mis-pnp-upload-client-side-solution",
+    "id": "05bbceed-cb2d-4c79-905b-6936f9634b0a",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.19.0"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "mis-pnp-upload description"
+      },
+      "longDescription": {
+        "default": "mis-pnp-upload description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "mis-pnp-upload Feature",
+        "description": "The feature that activates elements of the mis-pnp-upload solution.",
+        "id": "b082a5a2-c77a-4004-9ecc-a9b444f2a8f2",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/mis-pnp-upload.sppkg"
+  }
+}
