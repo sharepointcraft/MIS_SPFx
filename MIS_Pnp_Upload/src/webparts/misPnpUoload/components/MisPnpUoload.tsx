@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx'; // For Excel parsing
 import { sp } from '@pnp/sp/presets/all'; // Ensure PnPjs is configured
 import type { IMisPnpUoloadProps } from './IMisPnpUoloadProps';
 
+
 interface ITableData {
   'NDC Code': string;
   Plant: string;
@@ -30,8 +31,15 @@ export default class MisPnpUpload extends React.Component<
 
   public render(): React.ReactElement<IMisPnpUoloadProps> {
     return (
-      <div>
-        <button onClick={this._triggerFileInput}>Choose File</button>
+      <div id='outerbox'> 
+        <div className='left_button'>
+          <h3 className='mis_title'>MIS Documentation</h3>
+        <button id='upload_button' onClick={this._triggerFileInput}>Choose File</button></div>
+        <div className='right_button'><button id='submit_button' onClick={this._handleSubmit} style={{ marginRight: '10px' }}>Submit</button>
+        <button id='cancel_button' onClick={this._handleCancel}>Cancel</button></div>
+        
+        
+      
         <input
           type="file"
           ref={(input) => (this.fileInput = input)}
@@ -40,11 +48,6 @@ export default class MisPnpUpload extends React.Component<
         />
 
         {this.state.tableData.length > 0 && this._renderTable()}
-
-        <div style={{ marginTop: '10px' }}>
-          <button onClick={this._handleSubmit} style={{ marginRight: '10px' }}>Submit</button>
-          <button onClick={this._handleCancel}>Cancel</button>
-        </div>
       </div>
     );
   }
@@ -114,18 +117,18 @@ export default class MisPnpUpload extends React.Component<
     const headers = ['NDC Code', 'Plant', 'Dosage form'];
 
     return (
-      <table>
-        <thead>
-          <tr>
+      <table className='csv_table'>
+        <thead id='csv_table_head'>
+          <tr id='csv_header'>
             {headers.map((header, index) => (
               <th key={index}>{header}</th>
             ))}
             <th>Attachment</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id='csv_body'>
           {tableData.map((row, rowIndex) => (
-            <tr key={rowIndex}>
+            <tr id="csv_data" key={rowIndex}>
               {headers.map((header, colIndex) => (
                 <td key={colIndex}>{row[header as keyof ITableData]}</td>
               ))}
@@ -157,8 +160,14 @@ export default class MisPnpUpload extends React.Component<
       filePickerResult: [],
       tableData: [],
       attachments: [],
+    }, () => {
+      // Reset the file input value
+      if (this.fileInput) {
+        this.fileInput.value = '';
+      }
     });
   };
+  
 
   private _handleSubmit = async () => {
     const { tableData, attachments } = this.state;

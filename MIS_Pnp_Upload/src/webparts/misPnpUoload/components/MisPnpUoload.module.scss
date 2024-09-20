@@ -10,25 +10,39 @@
   }
 }
 
-.welcome {
-  text-align: center;
-}
 
-.welcomeImage {
+.csv_table {
   width: 100%;
-  max-width: 420px;
+  border-collapse: collapse; // Ensures borders are shared between adjacent cells
+  border: 1px solid #ddd; // Border for the entire table
+
+  th, td {
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #ddd; // Border for each cell
+  }
 }
 
-.links {
-  a {
-    text-decoration: none;
-    color: "[theme:link, default:#03787c]";
-    color: var(--link); // note: CSS Custom Properties support is limited to modern browsers only
+#csv_table_head {
+  background-color: #f0f0f0; // Background for header
+}
 
-    &:hover {
-      text-decoration: underline;
-      color: "[theme:linkHovered, default: #014446]";
-      color: var(--linkHovered); // note: CSS Custom Properties support is limited to modern browsers only
-    }
+#csv_body {
+  background-color: #fff;
+}
+
+#csv_data {
+  border-bottom: 1px solid #ddd;
+  
+  &:nth-child(odd) {
+    background-color: #f9f9f9; // Lighter color for odd rows
   }
+  
+  &:nth-child(even) {
+    background-color: #e9e9e9; // Slightly darker color for even rows
+  }
+}
+
+#csv_header {
+  font-weight: bold;
 }
