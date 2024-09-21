@@ -1,14 +1,29 @@
 import * as React from 'react';
-import { parse, ParseResult } from 'papaparse'; // For CSV parsing
-import * as XLSX from 'xlsx'; // For Excel parsing
-import { sp } from '@pnp/sp/presets/all'; // Ensure PnPjs is configured
+import { parse, ParseResult } from 'papaparse';
+import * as XLSX from 'xlsx';
+import { sp } from '@pnp/sp/presets/all';
 import type { IMisPnpUoloadProps } from './IMisPnpUoloadProps';
-
+import './MisPnpUoload.module.scss';
 
 interface ITableData {
   'NDC Code': string;
-  Plant: string;
-  'Dosage form': string;
+  'Plant': string;
+  'Dosage_form': string;
+  'Material_code': number;
+  'Description': string;
+  'Product': string;
+  'Strength': number;
+  'Pack_size': number;
+  'RMC': string;
+  'PMC': string;
+  'Consumables': string;
+  'Conversion_cost': string;
+  'Acquisition_Cost_CMO':string;
+  'Interest_on_Wc':string;
+  'COP': string;
+  'Freight_DDP_Sea': string;
+  'COGS': string;
+  'Remarks_on_Changes': string;
 }
 
 interface IAttachment {
@@ -18,7 +33,7 @@ interface IAttachment {
 
 export default class MisPnpUpload extends React.Component<
   IMisPnpUoloadProps,
-  { filePickerResult: File[]; tableData: ITableData[]; attachments: IAttachment[] }
+  { filePickerResult: File[]; tableData: ITableData[]; attachments: IAttachment[]; fileName: string }
 > {
   constructor(props: IMisPnpUoloadProps) {
     super(props);
@@ -26,61 +41,74 @@ export default class MisPnpUpload extends React.Component<
       filePickerResult: [],
       tableData: [],
       attachments: [],
+      fileName: '',
     };
   }
 
   public render(): React.ReactElement<IMisPnpUoloadProps> {
     return (
-      <div id='outerbox'> 
+      <div id='outerbox'>
         <div className='left_button'>
           <h3 className='mis_title'>MIS Documentation</h3>
-        <button id='upload_button' onClick={this._triggerFileInput}>Choose File</button></div>
-        <div className='right_button'><button id='submit_button' onClick={this._handleSubmit} style={{ marginRight: '10px' }}>Submit</button>
-        <button id='cancel_button' onClick={this._handleCancel}>Cancel</button></div>
-        
-        
-      
-        <input
-          type="file"
-          ref={(input) => (this.fileInput = input)}
-          onChange={this._onFileSelected}
-          style={{ display: 'none' }}
-        />
+          <button id='upload_button' onClick={this._triggerFileInput}>Choose File</button>
+          <input
+            type="text"
+            value={this.state.fileName}
+            readOnly
+            placeholder="No file chosen"
+            className="file-name-input"
+            style={{ marginLeft: '10px', width: '200px' }}
+          />
+        </div>
+        <div className='right_button'>
+          <button id='submit_button' onClick={this._handleSubmit} style={{ marginRight: '10px' }}>Submit</button>
+          <button id='cancel_button' onClick={this._handleCancel}>Cancel</button>
+        </div>
 
-        {this.state.tableData.length > 0 && this._renderTable()}
+        <div className='outer_table'>
+          <input
+            type="file"
+            ref={(input) => (this.fileInput = input)}
+            onChange={this._onFileSelected}
+            style={{ display: 'none' }}
+          />
+
+          {this.state.tableData.length > 0 && this._renderTable()}
+        </div>
       </div>
     );
   }
 
   private fileInput: HTMLInputElement | null = null;
 
-  // This method triggers the hidden file input element to open the file dialog directly.
   private _triggerFileInput = () => {
     if (this.fileInput) {
       this.fileInput.click();
     }
   };
 
-  // Handle file selection
   private _onFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
       const file = files[0];
-      const fileName = file.name?.toLowerCase();
-      if (fileName.endsWith('.csv')) {
+      const fileName = file.name;
+      const fileNameLower = fileName.toLowerCase();
+
+      if (fileNameLower.endsWith('.csv')) {
         const fileContent = await file.text();
         this._parseCSV(fileContent);
-      } else if (fileName.endsWith('.xlsx')) {
+      } else if (fileNameLower.endsWith('.xlsx')) {
         const arrayBuffer = await file.arrayBuffer();
         this._parseExcel(arrayBuffer);
       }
-      this.setState({ filePickerResult: [file] });
+
+      this.setState({ filePickerResult: [file], fileName });
     }
   };
 
   private _parseCSV = (csvContent: string) => {
     parse(csvContent, {
-      header: true, // CSV contains header row
+      header: true,
       skipEmptyLines: true,
       complete: (results: ParseResult<ITableData>) => {
         const rawData = results.data;
@@ -102,8 +130,23 @@ export default class MisPnpUpload extends React.Component<
 
     const data: ITableData[] = rawData.map((row: any) => ({
       'NDC Code': row[0],
-      Plant: row[1],
-      'Dosage form': row[2],
+      'Plant': row[1],
+      'Dosage_form': row[2],
+      'Material_code': row[3],
+      'Description': row[4],
+      'Product': row[5],
+      'Strength': row[6],
+      'Pack_size': row[7],
+      'RMC': row[8],
+      'PMC': row[9],
+      'Consumables': row[10],
+      'Conversion_cost': row[11],
+      'Acquisition_Cost_CMO': row[12],
+      'Interest_on_Wc': row[13],
+      'COP': row[14],
+      'Freight_DDP_Sea': row[15],
+      'COGS': row[16],
+      'Remarks_on_Changes': row[18],
     }));
 
     this.setState({ tableData: data });
@@ -114,34 +157,41 @@ export default class MisPnpUpload extends React.Component<
 
     if (tableData.length === 0) return null;
 
-    const headers = ['NDC Code', 'Plant', 'Dosage form'];
+    const headers = [
+      'NDC Code', 'Plant', 'Dosage_form', 'Material_code', 'Description',
+      'Product', 'Strength', 'Pack_size', 'RMC', 'PMC', 'Consumables',
+      'Conversion_cost', 'Acquisition_Cost_CMO', 'Interest_on_Wc',
+      'COP', 'Freight_DDP_Sea', 'COGS','Remarks_on_Changes'
+    ];
 
     return (
-      <table className='csv_table'>
-        <thead id='csv_table_head'>
-          <tr id='csv_header'>
-            {headers.map((header, index) => (
-              <th key={index}>{header}</th>
-            ))}
-            <th>Attachment</th>
-          </tr>
-        </thead>
-        <tbody id='csv_body'>
-          {tableData.map((row, rowIndex) => (
-            <tr id="csv_data" key={rowIndex}>
-              {headers.map((header, colIndex) => (
-                <td key={colIndex}>{row[header as keyof ITableData]}</td>
+      <div className="table-container">
+        <table className="csv_table">
+          <thead id="csv_table_head">
+            <tr id="csv_header">
+              {headers.map((header, index) => (
+                <th key={index}>{header}</th>
               ))}
-              <td>
-                <input
-                  type="file"
-                  onChange={(e) => this._handleFileChange(e, row['NDC Code'])}
-                />
-              </td>
+              <th>Attachment</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody id="csv_body">
+            {tableData.map((row, rowIndex) => (
+              <tr id="csv_data" key={rowIndex}>
+                {headers.map((header, colIndex) => (
+                  <td key={colIndex}>{row[header as keyof ITableData]}</td>
+                ))}
+                <td>
+                  <input
+                    type="file"
+                    onChange={(e) => this._handleFileChange(e, row['NDC Code'])}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     );
   };
 
@@ -155,131 +205,109 @@ export default class MisPnpUpload extends React.Component<
   };
 
   private _handleCancel = () => {
-    // Clear the selected files and the grid view data
     this.setState({
       filePickerResult: [],
       tableData: [],
       attachments: [],
+      fileName: '',
     }, () => {
-      // Reset the file input value
       if (this.fileInput) {
         this.fileInput.value = '';
       }
     });
   };
-  
 
   private _handleSubmit = async () => {
-    const { tableData, attachments } = this.state;
-
+    const { tableData } = this.state;
+  
     if (tableData.length === 0) {
-      console.error('No table data to save');
+      alert('No table data to save.');
       return;
     }
-
+  
     try {
-      // Save all grid view data to the SharePoint list
       for (const row of tableData) {
-        const ndcCode = row['NDC Code']; // Using display name from grid
+        const ndcCode = row['NDC Code'];
         const plant = row['Plant'];
-        const dosageForm = row['Dosage form'];
-
-        // Check if an item with the same NDC Code already exists
+        const dosageForm = row['Dosage_form'];
+        const material= row['Material_code'];
+        const description = row['Description'];
+        const product = row['Product'];
+        const strength = row['Strength'];
+        const packsize = row['Pack_size'];    
+        const rmc = row['RMC'];
+        const pmc = row['PMC'];
+        const consumables = row['Consumables'];
+        const conversionCost = row['Conversion_cost'];
+        const acquisitionCostCMO = row['Acquisition_Cost_CMO'];
+        const interestOnWc = row['Interest_on_Wc'];
+        const cop = row['COP'];
+        const freightDdpSea = row['Freight_DDP_Sea'];
+        const cogs = row['COGS'];
+        const remarksonchange=row['Remarks_on_Changes'];
         const existingItems = await sp.web.lists.getByTitle('MIS_Upload_File')
-          .items.filter(`NDCCode eq '${ndcCode}'`) // Use the correct internal column name 'NDCCode'
-          .top(1) // We only care about one existing item
+          .items.filter(`NDCCode eq '${ndcCode}'`)
+          .top(1)
           .get();
-
+  
         if (existingItems.length > 0) {
-          // If the item exists, update the version history and the record
+          // Update existing item
           const existingItem = existingItems[0];
-          const currentVersion = existingItem.VersionHistroy || 'V1'; // Use 'V1' as default if no version history exists
-          const versionNumber = parseInt(currentVersion.substring(1)); // Extract the number from the version (e.g., V1 -> 1)
-          const newVersion = `V${versionNumber + 1}`; // Increment version
-
-          // Update existing record with new values and updated version
           await sp.web.lists.getByTitle('MIS_Upload_File').items.getById(existingItem.Id).update({
             Plant: plant,
-            Dosage_x0020_form: dosageForm, // Correct internal name for 'Dosage form'
-            VersionHistroy: newVersion, // Update 'VersionHistroy' column with the new version
+            Dosage_form: dosageForm,
+            Material_code: material,
+            Description: description,
+            Product: product,
+            Strength: strength,
+            Pack_size: packsize,
+            RMC: rmc,
+            PMC: pmc,
+            Consumables: consumables,
+            Conversion_cost: conversionCost,
+            Acquisition_Cost_CMO: acquisitionCostCMO,
+            Interest_on_Wc: interestOnWc,
+            COP: cop,
+            Freight_DDP_Sea: freightDdpSea,
+            COGS: cogs,
+            Remarks_on_Changes:remarksonchange,
+            
           });
-
-          console.log(`Record with NDC Code '${ndcCode}' updated to version ${newVersion}.`);
+  
+          console.log(`Record with NDC Code '${ndcCode}' updated.`);
         } else {
-          // If the item doesn't exist, create a new record with version history 'V1'
+          // Add new item
           await sp.web.lists.getByTitle('MIS_Upload_File').items.add({
-            NDCCode: ndcCode, // Correct internal name for 'NDCCode'
+            NDCCode: ndcCode,
             Plant: plant,
-            Dosage_x0020_form: dosageForm, // Correct internal name for 'Dosage form'
-            VersionHistroy: 'V1', // Start version history in 'VersionHistroy' column
+            Dosage_form: dosageForm,
+            Material_code:material,
+            Description: description,
+            Product: product,
+            Strength: strength,
+            Pack_size: packsize,
+            RMC: rmc,
+            PMC: pmc,
+            Consumables: consumables,
+            Conversion_cost: conversionCost,
+            Acquisition_Cost_CMO: acquisitionCostCMO,
+            Interest_on_Wc: interestOnWc,
+            COP: cop,
+            Freight_DDP_Sea: freightDdpSea,
+            COGS: cogs,
+            Remarks_on_Changes: remarksonchange,
           });
-
-          console.log(`New record with NDC Code '${ndcCode}' created with version V1.`);
+  
+          console.log(`New record with NDC Code '${ndcCode}' created.`);
         }
       }
-
-      // Handle file attachments similarly
-      const attachmentsByNdcCode = attachments.reduce((acc: Record<string, IAttachment[]>, attachment) => {
-        if (!acc[attachment.ndcCode]) {
-          acc[attachment.ndcCode] = [];
-        }
-        acc[attachment.ndcCode].push(attachment);
-        return acc;
-      }, {});
-
-      // Save attachments to the SharePoint document library
-      for (const [ndcCode, attachments] of Object.entries(attachmentsByNdcCode)) {
-        let documentSetId;
-
-        try {
-          const existingDocumentSet = await sp.web.lists
-            .getByTitle('MIS_Attachment')
-            .items.filter(`Title eq '${ndcCode}'`)
-            .top(1)
-            .get();
-
-          if (existingDocumentSet.length > 0) {
-            documentSetId = existingDocumentSet[0].Id;
-          } else {
-            const documentSet = await sp.web.lists.getByTitle('MIS_Attachment').items.add({
-              ContentTypeId: '0x0120D52000A9F6E84B73F44EADDEADB84D61',
-              Title: ndcCode,
-            });
-            documentSetId = documentSet.data.Id;
-          }
-        } catch (error) {
-          console.error(`Error creating/retrieving document set for NDC Code ${ndcCode}`, error);
-        }
-
-        const folderUrl = `/sites/DevJay/MIS_Attachment/${documentSetId}`;
-        const folderExists = await sp.web.getFolderByServerRelativeUrl(folderUrl).select('Exists').get()
-          .then(() => true)
-          .catch(() => false);
-
-        if (!folderExists) {
-          await sp.web.folders.add(folderUrl);
-        }
-
-        for (const attachment of attachments) {
-          const { file } = attachment;
-          await sp.web
-            .getFolderByServerRelativeUrl(folderUrl)
-            .files.add(file.name, file, true)
-            .then(() => console.log(`File uploaded to ${folderUrl}`));
-        }
-
-        await sp.web.lists.getByTitle('MIS_Attachment').items.getById(documentSetId).update({
-          NDCCode: ndcCode,
-        });
-      }
-
-      console.log('All data and attachments have been successfully saved.');
+  
+      alert('All data has been successfully saved.');
+      console.log('All data has been successfully saved.');
     } catch (error) {
       console.error('Error saving data to SharePoint', error);
+      alert('Error saving data to SharePoint.');
     }
   };
-
-
-
-
+  
 }
