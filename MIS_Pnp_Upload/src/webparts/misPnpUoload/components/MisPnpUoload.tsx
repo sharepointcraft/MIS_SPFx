@@ -23,6 +23,7 @@ interface ITableData {
   'COP': string;
   'Freight_DDP_Sea': string;
   'COGS': string;
+  "Updated_Date":string;
   'Remarks_on_Changes': string;
 }
 
@@ -125,9 +126,9 @@ export default class MisPnpUpload extends React.Component<
     const firstSheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[firstSheetName];
     const json: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
+  
     const rawData = json.slice(3); // Assuming data starts from row 4
-
+  
     const data: ITableData[] = rawData.map((row: any) => ({
       'NDC Code': row[0],
       'Plant': row[1],
@@ -147,10 +148,29 @@ export default class MisPnpUpload extends React.Component<
       'Freight_DDP_Sea': row[15],
       'COGS': row[16],
       'Remarks_on_Changes': row[18],
+      'Updated_Date': this._convertExcelDate(row[17]) // Convert the numeric date
     }));
-
+  
     this.setState({ tableData: data });
   };
+  
+  // Helper function to convert Excel's numeric date to a JavaScript date
+  private _convertExcelDate = (excelDate: number): string => {
+    if (!excelDate || isNaN(excelDate)) {
+      return ''; // Return empty string if the date is empty or invalid
+    }
+  
+    const date = new Date((excelDate - 25569) * 86400 * 1000); // Convert Excel date to JS date
+    
+    // Manually format the date in DD/MM/YYYY format
+    const day = String(date.getDate()).padStart(2, '0'); // Add leading zero if needed
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed, so add 1
+    const year = date.getFullYear();
+  
+    return `${day}/${month}/${year}`; // Return the formatted date
+  };
+  
+  
 
   private _renderTable = () => {
     const { tableData } = this.state;
@@ -161,7 +181,7 @@ export default class MisPnpUpload extends React.Component<
       'NDC Code', 'Plant', 'Dosage_form', 'Material_code', 'Description',
       'Product', 'Strength', 'Pack_size', 'RMC', 'PMC', 'Consumables',
       'Conversion_cost', 'Acquisition_Cost_CMO', 'Interest_on_Wc',
-      'COP', 'Freight_DDP_Sea', 'COGS','Remarks_on_Changes'
+      'COP', 'Freight_DDP_Sea', 'COGS','Updated_Date','Remarks_on_Changes'
     ];
 
     return (
@@ -233,7 +253,7 @@ export default class MisPnpUpload extends React.Component<
         const material= row['Material_code'];
         const description = row['Description'];
         const product = row['Product'];
-        const strength = row['Strength'];
+        const strength = row['Strength'].toString();;
         const packsize = row['Pack_size'];    
         const rmc = row['RMC'];
         const pmc = row['PMC'];
@@ -244,6 +264,7 @@ export default class MisPnpUpload extends React.Component<
         const cop = row['COP'];
         const freightDdpSea = row['Freight_DDP_Sea'];
         const cogs = row['COGS'];
+        const updateddate= row['Updated_Date'];
         const remarksonchange=row['Remarks_on_Changes'];
         const existingItems = await sp.web.lists.getByTitle('MIS_Upload_File')
           .items.filter(`NDCCode eq '${ndcCode}'`)
@@ -256,10 +277,10 @@ export default class MisPnpUpload extends React.Component<
           await sp.web.lists.getByTitle('MIS_Upload_File').items.getById(existingItem.Id).update({
             Plant: plant,
             Dosage_form: dosageForm,
-            Material_code: material,
+            Material_code: material.toString(),
             Description: description,
             Product: product,
-            Strength: strength,
+            Strength: strength.toString(),
             Pack_size: packsize,
             RMC: rmc,
             PMC: pmc,
@@ -270,6 +291,7 @@ export default class MisPnpUpload extends React.Component<
             COP: cop,
             Freight_DDP_Sea: freightDdpSea,
             COGS: cogs,
+            Updated_Date: updateddate,
             Remarks_on_Changes:remarksonchange,
             
           });
@@ -284,7 +306,7 @@ export default class MisPnpUpload extends React.Component<
             Material_code:material,
             Description: description,
             Product: product,
-            Strength: strength,
+            Strength: strength.toString(),
             Pack_size: packsize,
             RMC: rmc,
             PMC: pmc,
@@ -295,6 +317,7 @@ export default class MisPnpUpload extends React.Component<
             COP: cop,
             Freight_DDP_Sea: freightDdpSea,
             COGS: cogs,
+            Updated_Date: updateddate,
             Remarks_on_Changes: remarksonchange,
           });
   
@@ -303,7 +326,7 @@ export default class MisPnpUpload extends React.Component<
       }
   
       alert('All data has been successfully saved.');
-      console.log('All data has been successfully saved.');
+      console.log('All data has been successfully saved.'); 
     } catch (error) {
       console.error('Error saving data to SharePoint', error);
       alert('Error saving data to SharePoint.');
