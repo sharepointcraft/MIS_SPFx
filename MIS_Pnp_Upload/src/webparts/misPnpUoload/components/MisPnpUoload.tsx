@@ -183,8 +183,6 @@ export default class MisPnpUpload extends React.Component<
     return `${day}/${month}/${year}`; // Return the formatted date
   };
   
-  
-
   private _renderTable = () => {
     const { tableData } = this.state;
 
@@ -242,7 +240,6 @@ export default class MisPnpUpload extends React.Component<
       </div>
     );
 };
-
 
   private _handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, ndcCode: string) => {
     const files = event.target.files;
@@ -409,8 +406,6 @@ export default class MisPnpUpload extends React.Component<
           console.log(`New record with NDC Code '${ndcCode}' created.`);
         }
       }
-
-
   
       alert("All data has been successfully saved.");
       console.log("All data has been successfully saved.");
@@ -422,8 +417,5 @@ export default class MisPnpUpload extends React.Component<
       this.setState({ isSubmitDisabled: true });
     // Save the state in localStorage to persist between page reloads
       localStorage.setItem('isSubmitDisabled', 'true');
-  };
-  
-  
-  
+  };  
 }
