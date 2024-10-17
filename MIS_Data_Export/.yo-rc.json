@@ -1,0 +1,22 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "plusBeta": false,
+    "isCreatingSolution": true,
+    "nodeVersion": "18.20.4",
+    "sdksVersions": {
+      "@microsoft/microsoft-graph-client": "3.0.2",
+      "@microsoft/teams-js": "2.12.0"
+    },
+    "version": "1.19.0",
+    "libraryName": "mis-data-export",
+    "libraryId": "59652bb9-c38d-4ef7-8bc7-10dd5f0a091c",
+    "environment": "spo",
+    "packageManager": "npm",
+    "solutionName": "mis-data-export",
+    "solutionShortDescription": "mis-data-export description",
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "componentType": "extension",
+    "extensionType": "ListViewCommandSet"
+  }
+}

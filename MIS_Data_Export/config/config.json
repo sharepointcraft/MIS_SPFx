@@ -1,0 +1,18 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "mis-data-export-command-set": {
+      "components": [
+        {
+          "entrypoint": "./lib/extensions/misDataExport/MisDataExportCommandSet.js",
+          "manifest": "./src/extensions/misDataExport/MisDataExportCommandSet.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "MisDataExportCommandSetStrings": "lib/extensions/misDataExport/loc/{locale}.js"
+  }
+}
