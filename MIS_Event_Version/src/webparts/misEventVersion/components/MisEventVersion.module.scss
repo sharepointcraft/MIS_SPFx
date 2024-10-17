@@ -1,0 +1,93 @@
+.misEventVersion {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #0078d4; /* Focus border color */
+}
+
+.suggestionsList {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  max-height: 200px; /* Limit height of suggestions */
+  overflow-y: auto; /* Enable scrolling if necessary */
+  background-color: white; /* Background color for suggestions */
+  z-index: 1000; /* Ensure suggestions appear above other elements */
+}
+
+.suggestionsList li {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.suggestionsList li:hover {
+  background-color: #f0f0f0; /* Highlight on hover */
+}
+
+.activeSuggestion {
+  background-color: #b3d9ff; /* Highlight color for the active suggestion */
+}
+
+button {
+  padding: 10px 15px;
+  font-size: 16px;
+  color: white;
+  background-color: #0078d4; /* Button background color */
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #005a9e; /* Darker shade on hover */
+}
+
+.loading {
+  font-size: 16px;
+  color: #0078d4; /* Loading text color */
+}
+
+.error {
+  font-size: 16px;
+  color: red; /* Error message color */
+  margin: 10px 0; /* Spacing for error message */
+}
+
+.versionTable {
+  width: 100%;
+  border-collapse: collapse; /* Collapses borders for better aesthetics */
+  margin-top: 20px;
+}
+
+.versionTable th,
+.versionTable td {
+  border: 1px solid #ccc; /* Cell border */
+  padding: 10px;
+  text-align: left;
+}
+
+.versionTable th {
+  background-color: #f5f5f5; /* Header background color */
+}
+
+.versionTable tr:nth-child(even) {
+  background-color: #f9f9f9; /* Zebra striping for table rows */
+}
+
+.versionTable tr:hover {
+  background-color: #f1f1f1; /* Highlight row on hover */
+}

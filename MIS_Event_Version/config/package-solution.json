@@ -1,8 +1,8 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
   "solution": {
-    "name": "mis-pnp-upload-client-side-solution",
-    "id": "05bbceed-cb2d-4c79-905b-6936f9634b0a",
+    "name": "mis-event-version-client-side-solution",
+    "id": "b09c7381-5b5d-4e63-a8e0-5338ad6c63d1",
     "version": "1.0.0.0",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
@@ -12,14 +12,14 @@
       "websiteUrl": "",
       "privacyUrl": "",
       "termsOfUseUrl": "",
-      "mpnId": "Undefined-1.19.0"
+      "mpnId": "Undefined-1.20.0"
     },
     "metadata": {
       "shortDescription": {
-        "default": "mis-pnp-upload description"
+        "default": "mis-event-version description"
       },
       "longDescription": {
-        "default": "mis-pnp-upload description"
+        "default": "mis-event-version description"
       },
       "screenshotPaths": [],
       "videoUrl": "",
@@ -27,14 +27,14 @@
     },
     "features": [
       {
-        "title": "mis-pnp-upload Feature",
-        "description": "The feature that activates elements of the mis-pnp-upload solution.",
-        "id": "b082a5a2-c77a-4004-9ecc-a9b444f2a8f2",
+        "title": "mis-event-version Feature",
+        "description": "The feature that activates elements of the mis-event-version solution.",
+        "id": "a3d0df0d-2486-4293-a803-e611530e3e44",
         "version": "1.0.0.0"
       }
     ]
   },
   "paths": {
-    "zippedPackage": "solution/mis-pnp-upload.sppkg"
+    "zippedPackage": "solution/mis-event-version.sppkg"
   }
 }

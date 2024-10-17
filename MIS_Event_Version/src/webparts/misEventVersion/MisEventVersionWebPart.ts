@@ -8,28 +8,30 @@ import {
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 import { IReadonlyTheme } from '@microsoft/sp-component-base';
 
-import * as strings from 'MisPnpUoloadWebPartStrings';
-import MisPnpUoload from './components/MisPnpUoload';
-import { IMisPnpUoloadProps } from './components/IMisPnpUoloadProps';
+import * as strings from 'MisEventVersionWebPartStrings';
+import MisEventVersion from './components/MisEventVersion';
+import { IMisEventVersionProps } from './components/IMisEventVersionProps';
 
-export interface IMisPnpUoloadWebPartProps {
+export interface IMisEventVersionWebPartProps {
   description: string;
 }
 
-export default class MisPnpUoloadWebPart extends BaseClientSideWebPart<IMisPnpUoloadWebPartProps> {
+export default class MisEventVersionWebPart extends BaseClientSideWebPart<IMisEventVersionWebPartProps> {
 
   private _isDarkTheme: boolean = false;
   private _environmentMessage: string = '';
 
   public render(): void {
-    const element: React.ReactElement<IMisPnpUoloadProps> = React.createElement(
-      MisPnpUoload,
-      {context: this.context,
+    const element: React.ReactElement<IMisEventVersionProps> = React.createElement(
+      MisEventVersion,
+      {
         description: this.properties.description,
         isDarkTheme: this._isDarkTheme,
         environmentMessage: this._environmentMessage,
         hasTeamsContext: !!this.context.sdks.microsoftTeams,
-        userDisplayName: this.context.pageContext.user.displayName
+        userDisplayName: this.context.pageContext.user.displayName,
+        spHttpClient: this.context.spHttpClient,
+        siteUrl: this.context.pageContext.web.absoluteUrl // Pass the current site URL
       }
     );
 
@@ -42,28 +44,25 @@ export default class MisPnpUoloadWebPart extends BaseClientSideWebPart<IMisPnpUo
     });
   }
 
-
-
   private _getEnvironmentMessage(): Promise<string> {
-    if (!!this.context.sdks.microsoftTeams) { // running in Teams, office.com or Outlook
+    if (!!this.context.sdks.microsoftTeams) {
       return this.context.sdks.microsoftTeams.teamsJs.app.getContext()
         .then(context => {
           let environmentMessage: string = '';
           switch (context.app.host.name) {
-            case 'Office': // running in Office
+            case 'Office':
               environmentMessage = this.context.isServedFromLocalhost ? strings.AppLocalEnvironmentOffice : strings.AppOfficeEnvironment;
               break;
-            case 'Outlook': // running in Outlook
+            case 'Outlook':
               environmentMessage = this.context.isServedFromLocalhost ? strings.AppLocalEnvironmentOutlook : strings.AppOutlookEnvironment;
               break;
-            case 'Teams': // running in Teams
+            case 'Teams':
             case 'TeamsModern':
               environmentMessage = this.context.isServedFromLocalhost ? strings.AppLocalEnvironmentTeams : strings.AppTeamsTabEnvironment;
               break;
             default:
               environmentMessage = strings.UnknownEnvironment;
           }
-
           return environmentMessage;
         });
     }
@@ -77,16 +76,13 @@ export default class MisPnpUoloadWebPart extends BaseClientSideWebPart<IMisPnpUo
     }
 
     this._isDarkTheme = !!currentTheme.isInverted;
-    const {
-      semanticColors
-    } = currentTheme;
+    const { semanticColors } = currentTheme;
 
     if (semanticColors) {
       this.domElement.style.setProperty('--bodyText', semanticColors.bodyText || null);
       this.domElement.style.setProperty('--link', semanticColors.link || null);
       this.domElement.style.setProperty('--linkHovered', semanticColors.linkHovered || null);
     }
-
   }
 
   protected onDispose(): void {

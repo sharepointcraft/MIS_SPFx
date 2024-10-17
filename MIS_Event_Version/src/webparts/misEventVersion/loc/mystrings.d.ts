@@ -1,4 +1,4 @@
-declare interface IMisPnpUoloadWebPartStrings {
+declare interface IMisEventVersionWebPartStrings {
   PropertyPaneDescription: string;
   BasicGroupName: string;
   DescriptionFieldLabel: string;
@@ -13,7 +13,7 @@ declare interface IMisPnpUoloadWebPartStrings {
   UnknownEnvironment: string;
 }
 
-declare module 'MisPnpUoloadWebPartStrings' {
-  const strings: IMisPnpUoloadWebPartStrings;
+declare module 'MisEventVersionWebPartStrings' {
+  const strings: IMisEventVersionWebPartStrings;
   export = strings;
 }

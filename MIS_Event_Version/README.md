@@ -1,4 +1,4 @@
-# mis-pnp-upload
+# mis-event-version
 
 ## Summary
 
@@ -8,7 +8,7 @@ Short summary on functionality and used technologies.
 
 ## Used SharePoint Framework Version
 
-![version](https://img.shields.io/badge/version-1.19.0-green.svg)
+![version](https://img.shields.io/badge/version-1.20.0-green.svg)
 
 ## Applies to
 
