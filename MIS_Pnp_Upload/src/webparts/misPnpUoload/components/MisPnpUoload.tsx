@@ -36,11 +36,12 @@ export default class MisPnpUpload extends React.Component<
   IMisPnpUoloadProps,
   {
     filePickerResult: File[];
-    tableData: ITableData[];
+    tableData: ITableData[];    
     attachments: IAttachment[];
     fileName: string;
     isSubmitDisabled: boolean;
     loading: boolean; // New loading state
+    alertMessage: string;
   }
 > {
   constructor(props: IMisPnpUoloadProps) {
@@ -52,6 +53,8 @@ export default class MisPnpUpload extends React.Component<
       fileName: "",
       isSubmitDisabled: false,
       loading: false, // Initialize loading as false
+      alertMessage: "", // Initialize alertMessage as an empty string
+      
     };
   }
 
@@ -91,8 +94,12 @@ export default class MisPnpUpload extends React.Component<
             Cancel
           </button>
         </div>
-        {this.state.loading && <div className="loader">Loading...</div>}{" "}
-        {/* Loader display */}
+        {this.state.loading && (
+          <div className="loader">
+            <div className="spinner"></div>
+            <div className="loading-text">Loading...</div>
+          </div>
+        )}
         <div className="outer_table">
           <input
             type="file"
@@ -106,6 +113,7 @@ export default class MisPnpUpload extends React.Component<
       </div>
     );
   }
+  
 
   private fileInput: HTMLInputElement | null = null;
 
@@ -164,7 +172,7 @@ export default class MisPnpUpload extends React.Component<
     const worksheet = workbook.Sheets[firstSheetName];
     const json: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-    const rawData = json.slice(3);
+    const rawData = json.slice(3); // Assuming first 3 rows are headers or irrelevant
 
     const data: ITableData[] = rawData.map((row: any) => ({
       "NDC Code": row[0],
@@ -207,7 +215,7 @@ export default class MisPnpUpload extends React.Component<
   private _renderTable = () => {
     const { tableData } = this.state;
 
-    if (tableData.length === 0) return null;
+    if (tableData.length === 0) return " ";
 
     const headers = [
       "Attachment",
@@ -248,11 +256,15 @@ export default class MisPnpUpload extends React.Component<
                 <td>
                   <input
                     type="file"
-                    onChange={(e) => this._handleFileChange(e, row["NDC Code"])}
+                    onChange={(e) =>
+                      this._handleFileChange(e, row["NDC Code"])
+                    }
                   />
                 </td>
                 {headers.slice(1).map((header, colIndex) => (
-                  <td key={colIndex}>{row[header as keyof ITableData]}</td>
+                  <td key={colIndex}>
+                    {row[header as keyof ITableData]}
+                  </td>
                 ))}
               </tr>
             ))}
@@ -297,16 +309,18 @@ export default class MisPnpUpload extends React.Component<
 
     localStorage.setItem("isSubmitDisabled", "false");
   };
+
+
   private _handleSubmit = async () => {
     const { tableData, attachments } = this.state;
-
+  
     if (tableData.length === 0) {
       alert("No table data to save.");
       return;
     }
-
+  
     this.setState({ loading: true }); // Start loading when submitting
-
+  
     try {
       for (const row of tableData) {
         const ndcCode = row["NDC Code"];
@@ -328,74 +342,142 @@ export default class MisPnpUpload extends React.Component<
         const cogs = row["COGS"];
         const updateddate = row["Updated_Date"];
         const remarksonchange = row["Remarks_on_Changes"];
+  
+        // Check if the item already exists in the list
         const existingItems = await sp.web.lists
           .getByTitle("MIS_Upload_File")
           .items.filter(`NDCCode eq '${ndcCode}'`)
           .top(1)
           .get();
-
-        // Check if NDC folder exists in SharePoint library
+  
+        // Define the folder URL in the document library
         const folderUrl = `/sites/DevJay/MIS_Attachement/${ndcCode}`;
         const attachment = attachments.find((a) => a.ndcCode === ndcCode);
-
-        // Only create the folder if there are attachments
+  
+        // Retrieve the latest version number from the version history of the list item
+        let latestVersionNumber = 1; // Default version number if no history found
+  
+        if (existingItems.length > 0) {
+          const listItemId = existingItems[0].Id;
+  
+          // Get version history for the specific list item
+          const versionHistory = await sp.web.lists
+            .getByTitle("MIS_Upload_File")
+            .items.getById(listItemId)
+            .expand('Versions') // Expand the Versions property
+            .get();
+  
+          console.log(versionHistory.Versions.length); // Access the Versions property to see the version history
+  
+          if (versionHistory.Versions.length > 0) {
+            // Get the latest version number from the version history
+            latestVersionNumber = versionHistory.Versions.length + 1;
+            console.log(
+              `Latest version for NDC Code '${ndcCode}' is: ${latestVersionNumber}`
+            );
+          }
+        }
+  
+        // Only create the folder and upload the attachment if an attachment exists
         if (attachment) {
           try {
+            // Check if the folder already exists
             await sp.web.getFolderByServerRelativeUrl(folderUrl).get();
             console.log(`Folder '${ndcCode}' already exists.`);
           } catch (e) {
-            // Create folder if not exists
-            await sp.web.folders.add(
-              `/sites/DevJay/MIS_Attachement/${ndcCode}`
-            );
+            // If the folder does not exist, create it
+            await sp.web.folders.add(folderUrl);
             console.log(`Folder '${ndcCode}' created.`);
-
+  
             // Update the content type to 'Document Set'
             const folderItem = await sp.web
               .getFolderByServerRelativeUrl(folderUrl)
               .listItemAllFields.get();
-
+  
             await sp.web.lists
               .getByTitle("MIS_Attachement")
               .items.getById(folderItem.Id)
               .update({
                 ContentTypeId: "0x0120D520", // Document Set Content Type ID
               });
-
+  
             console.log(
               `Folder '${ndcCode}' content type changed to 'Document Set'.`
             );
           }
-
+  
           // Handle file upload into the folder
           const file = attachment.file;
+  
+          // Overwrite the existing file if it already exists
           const fileExists = await sp.web
             .getFolderByServerRelativeUrl(folderUrl)
             .files.filter(`Name eq '${file.name}'`)
             .get();
+  
+         // Step 1: Upload the file
+// Step 1: Upload the file
+let uploadedFile;
+if (fileExists.length > 0) {
+    console.log(`File '${file.name}' already exists in folder '${ndcCode}', creating a copy.`);
+    
+    // Get all files with similar names in the folder
+    const existingFiles = await sp.web.getFolderByServerRelativeUrl(folderUrl).files
+        .filter(`substringof('${file.name.split(".")[0]}', Name)`)
+        .get();
+    
+    // Find the next available number for naming (e.g., (1), (2))
+    let newFileName: string;
+    let copyNumber = 1;
+    const baseFileName = file.name.split(".")[0];
+    const fileExtension = file.name.split(".").pop();
 
-          if (fileExists.length > 0) {
-            console.log(
-              `File '${file.name}' already exists in folder '${ndcCode}', uploading as a new version.`
-            );
-            await sp.web
-              .getFolderByServerRelativeUrl(folderUrl)
-              .files.add(file.name, file, true); // Overwrite file
-          } else {
-            console.log(
-              `Uploading file '${file.name}' to folder '${ndcCode}'.`
-            );
-            await sp.web
-              .getFolderByServerRelativeUrl(folderUrl)
-              .files.add(file.name, file, false); // Add new file
+    // Loop to find the next available name
+    do {
+        newFileName = `${baseFileName} (${copyNumber}).${fileExtension}`;
+        copyNumber++;
+    } while (existingFiles.some(f => f.Name === newFileName));
+
+    // Upload the file with the new name
+    uploadedFile = await sp.web
+        .getFolderByServerRelativeUrl(folderUrl)
+        .files.add(newFileName, file, false); // Add the file as a copy with a new name
+} else {
+    console.log(`Uploading file '${file.name}' to folder '${ndcCode}'.`);
+    uploadedFile = await sp.web
+        .getFolderByServerRelativeUrl(folderUrl)
+        .files.add(file.name, file, false); // Add new file
+}
+
+
+          // Step 2: Update the file's metadata with the latest version number
+          try {
+            // Get the item ID of the newly uploaded file
+            const fileItem = await uploadedFile.file.listItemAllFields.get();
+  
+            // Update the Version_number field in the uploaded file's metadata
+            await sp.web.lists
+              .getByTitle("MIS_Attachement") // Ensure this is the correct list name
+              .items.getById(fileItem.Id) // Use the uploaded file's ID
+              .update({
+                Version_number: latestVersionNumber, // Set the version number for the file
+              });
+  
+            console.log(`Updated Version_number for uploaded file (ID: ${fileItem.Id}) to ${latestVersionNumber}.`);
+          } catch (error) {
+            console.error(`Error updating Version_number for uploaded file: ${error}`);
           }
+  
+          console.log(
+            `Version_number updated to ${latestVersionNumber} in the MIS_Attachment document library.`
+          );
         } else {
           console.log(
-            `No attachments found for NDC Code '${ndcCode}'. Folder will not be created.`
+            `No attachments found for NDC Code '${ndcCode}'. Folder will not be created or updated.`
           );
         }
-
-        // Update or add item in the list
+  
+        // Update or add item in the "MIS_Upload_File" list
         if (existingItems.length > 0) {
           // Update existing item
           const existingItem = existingItems[0];
@@ -421,9 +503,12 @@ export default class MisPnpUpload extends React.Component<
               COGS: cogs,
               Updated_Date: updateddate,
               Remarks_on_Changes: remarksonchange,
+              Version_number: latestVersionNumber, // Update the version number in the list
             });
-
-          console.log(`Record with NDC Code '${ndcCode}' updated.`);
+  
+          console.log(
+            `Record with NDC Code '${ndcCode}' updated in MIS_Upload_File list.`
+          );
         } else {
           // Add new item
           await sp.web.lists.getByTitle("MIS_Upload_File").items.add({
@@ -446,20 +531,35 @@ export default class MisPnpUpload extends React.Component<
             COGS: cogs,
             Updated_Date: updateddate,
             Remarks_on_Changes: remarksonchange,
+            Version_number: latestVersionNumber, // Set the version number for new items
           });
-
-          console.log(`New record with NDC Code '${ndcCode}' created.`);
+  
+          console.log(
+            `New record with NDC Code '${ndcCode}' created in MIS_Upload_File list.`
+          );
         }
       }
-
-      alert("All data has been successfully saved.");
+  
+      // Clear form data after successful submission
+      this.setState({
+        tableData: [],
+        attachments: [],
+        fileName: "",
+        filePickerResult: [],
+        isSubmitDisabled: true,
+        loading: false,
+        
+      });
+      alert("Data has been successfully saved.");
       console.log("All data has been successfully saved.");
     } catch (error) {
       console.error("Error saving data to SharePoint", error);
       alert("Error saving data to SharePoint.");
     }
-
-    this.setState({ isSubmitDisabled: true, loading: false }); // Set loading to false after submission
+  
     localStorage.setItem("isSubmitDisabled", "true");
   };
-}
+  
+  
+
+} 
