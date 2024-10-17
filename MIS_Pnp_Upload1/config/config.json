@@ -1,0 +1,19 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "mis-pnp-uoload-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/misPnpUoload/MisPnpUoloadWebPart.js",
+          "manifest": "./src/webparts/misPnpUoload/MisPnpUoloadWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "MisPnpUoloadWebPartStrings": "lib/webparts/misPnpUoload/loc/{locale}.js",
+    "ControlStrings": "node_modules/@pnp/spfx-controls-react/lib/loc/{locale}.js"
+  }
+}
