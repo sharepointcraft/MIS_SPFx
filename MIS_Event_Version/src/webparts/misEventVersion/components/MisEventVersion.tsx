@@ -30,9 +30,9 @@ export default class MisEventVersion extends React.Component<IMisEventVersionPro
   constructor(props: IMisEventVersionProps) {
     super(props);
 
-    // Get the NDCCode from URL parameters (if it exists)
+    // Get the NDCCode from URL parameters (case-sensitive)
     const urlParams = new URLSearchParams(window.location.search);
-    const ndcCodeFromUrl = urlParams.get('ndcCode') || ''; // Get the ndcCode or use an empty string
+    const ndcCodeFromUrl = urlParams.get('NDCCode') || ''; // Ensure this matches the URL parameter exactly
 
     this.state = {
       versionHistory: [],
@@ -244,7 +244,7 @@ export default class MisEventVersion extends React.Component<IMisEventVersionPro
         <form onSubmit={this.handleSearch}>
           <input
             type="text"
-            value={ndcCode}
+            value={ndcCode} // Bind the input value to state
             onChange={this.handleInputChange}
             onKeyDown={this.handleKeyDown} // Add keydown handler for keyboard navigation
             placeholder="Search NDC Code"
