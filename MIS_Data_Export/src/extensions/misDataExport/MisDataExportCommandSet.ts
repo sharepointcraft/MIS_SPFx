@@ -5,10 +5,10 @@ import {
 } from '@microsoft/sp-listview-extensibility';
 import { sp } from '@pnp/sp/presets/all';
 import { Dialog } from '@microsoft/sp-dialog';
-import * as XLSX from 'xlsx'; // Import the xlsx library
+import * as XLSX from 'xlsx';
 
 export interface IMisDataExportCommandSetProperties {
-  sampleText: string; // You can use this for customization if needed
+  sampleText: string; // For customization if needed
 }
 
 const LOG_SOURCE: string = 'MisDataExportCommandSet';
@@ -18,23 +18,22 @@ export default class MisDataExportCommandSet extends BaseListViewCommandSet<IMis
   public async onInit(): Promise<void> {
     Log.info(LOG_SOURCE, 'Initialized MisDataExportCommandSet');
 
-    // Conditional check for "DevJay" site and "MIS_Upload_File" list
     const currentSiteUrl = this.context.pageContext.web.absoluteUrl;
-    const currentListTitle = this.context.pageContext.list?.title; // Use optional chaining to handle undefined list
+    const currentListTitle = this.context.pageContext.list?.title;
 
+    // Show Export button only if conditions are met
     if (currentSiteUrl.includes('DevJay') && currentListTitle === 'MIS_Upload_File') {
-      // Allow the command to appear if the conditions match
-      return Promise.resolve();
+      this.tryGetCommand('ExportExcel').visible = true;
+      Log.info(LOG_SOURCE, 'Export button set to visible.');
     } else {
-      // Hide the command if the site or list does not match
       this._hideCommandBarButton();
-      return Promise.resolve();
     }
   }
 
   public onExecute(event: IListViewCommandSetExecuteEventParameters): void {
     switch (event.itemId) {
       case 'ExportExcel':
+        Log.info(LOG_SOURCE, 'Export to Excel button clicked.');
         this._exportToExcel();
         break;
       default:
@@ -47,12 +46,12 @@ export default class MisDataExportCommandSet extends BaseListViewCommandSet<IMis
     const exportCommand = this.tryGetCommand('ExportExcel');
     if (exportCommand) {
       exportCommand.visible = false;
+      Log.info(LOG_SOURCE, 'Export button hidden as it does not match conditions.');
     }
   }
 
   private async _exportToExcel(): Promise<void> {
-    const listTitle = this.context.pageContext.list?.title; // Safely check for list context
-
+    const listTitle = this.context.pageContext.list?.title;
     if (!listTitle) {
       Dialog.alert('No list context available.');
       return;
@@ -60,14 +59,12 @@ export default class MisDataExportCommandSet extends BaseListViewCommandSet<IMis
 
     try {
       // Fetch all list items
-      const items: any[] = await sp.web.lists.getByTitle(listTitle).items.top(5000)(); // Adjust the top count as needed
-
+      const items: any[] = await sp.web.lists.getByTitle(listTitle).items.top(5000)();
       if (items.length === 0) {
         Dialog.alert('No data available to export.');
         return;
       }
 
-      // Map internal field names to display names
       const fieldMapping = {
         "NDCCode": "NDC Code",
         "Plant": "Plant",
@@ -90,98 +87,81 @@ export default class MisDataExportCommandSet extends BaseListViewCommandSet<IMis
         "Remarks_on_Changes": "Remarks on Changes"
       };
 
-      // List of columns where the "$" sign should be added
-      const currencyFields = [
-        "Conversion cost",
-        "RMC",
-        "PMC",
-        "Consumables",
-        "Acquisition Cost CMO",
-        "Interest on Wc",
-        "COP",
-        "Freight DDP Sea",
-        "COGS"
-      ];
+      const currencyFields = ["Conversion cost", "RMC", "PMC", "Consumables", "Acquisition Cost CMO", "Interest on Wc", "COP", "Freight DDP Sea", "COGS"];
 
-      // Filter and rename items
       const filteredItems = items.map(item => {
         const filteredItem: { [key: string]: any } = {};
-        (Object.keys(fieldMapping) as Array<keyof typeof fieldMapping>).forEach(internalField => {
-          let value = item[internalField];
-
-          // Format the "Updated_Date" field as "MM-DD-YYYY"
-          if (internalField === "Updated_Date" && value) {
-            const dateValue = new Date(value);
-            filteredItem[fieldMapping[internalField]] = dateValue.toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit',
-            });
-          } else if (currencyFields.includes(fieldMapping[internalField]) && value) {
-            // If the field is a currency field, prepend the $ sign
-            filteredItem[fieldMapping[internalField]] = `$${value}`;
-          } else {
-            filteredItem[fieldMapping[internalField]] = value; // Apply display name
+        
+        for (const internalField in fieldMapping) {
+          const displayName = fieldMapping[internalField as keyof typeof fieldMapping];
+          
+          if (displayName) {
+            let value = item[internalField];
+            
+            // Format date and currency fields
+            if (internalField === "Updated_Date" && value) {
+              const dateValue = new Date(value);
+              filteredItem[displayName] = dateValue.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+              });
+            } else if (currencyFields.includes(displayName) && value) {
+              filteredItem[displayName] = `$${value}`;
+            } else {
+              filteredItem[displayName] = value;
+            }
           }
-        });
+        }
+        
         return filteredItem;
       });
 
-      // Convert the filtered data to XLSX format and trigger the download
+      // Trigger Excel download
       this._downloadExcel(filteredItems, `${listTitle}.xlsx`);
-
-      // Log the export action after the export is successful
+      
+      // Log export action after successful download
       await this._logExportAction();
+      
     } catch (error) {
       Dialog.alert('Error exporting list data to Excel: ' + error.message);
+      Log.error(LOG_SOURCE, new Error('Export error: ' + error.message));
     }
   }
 
   private _downloadExcel(data: any[], filename: string): void {
-    // Create a new workbook and a new worksheet
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(data);
-
-    // Append the worksheet to the workbook
     XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
-
-    // Generate a file and trigger the download
     XLSX.writeFile(wb, filename);
   }
 
-  // Method to log the export action to the "MIS_Version_Logs" list
   private async _logExportAction(): Promise<void> {
     const userName = this.context.pageContext.user.displayName;
     const userEmail = this.context.pageContext.user.email;
 
     try {
-      const userId = await this._getUserId(userEmail); // Get the user ID based on email
+      const userId = await this._getUserId(userEmail);
+      if (!userId) throw new Error('Failed to retrieve user ID.');
 
-      if (!userId) {
-        throw new Error('Failed to retrieve user ID.');
-      }
-
-      // Log entry in the "MIS_Version_Logs" list
-      const listTitle = 'MIS_Version_Logs';
       const logEntry = {
         Title: `Export to Excel by ${userName}`,
-        Log_CreatorId: userId, // Use the user ID for the People Picker column
+        Log_CreatorId: userId,
       };
 
-      await sp.web.lists.getByTitle(listTitle).items.add(logEntry);
-      Log.info(LOG_SOURCE, `Export action logged successfully for ${userName}`);
+      await sp.web.lists.getByTitle('MIS_Version_Logs').items.add(logEntry);
+      Log.info(LOG_SOURCE, `Export action logged for ${userName}`);
     } catch (error) {
-      Log.error(LOG_SOURCE, new Error(`Failed to log export action: ${error.message}`));
+      Log.error(LOG_SOURCE, new Error('Failed to log export action: ' + error.message));
     }
   }
 
-  // Helper function to get the user's ID based on their email
   private async _getUserId(email: string): Promise<number | null> {
     try {
       const result = await sp.web.siteUsers.getByEmail(email).get();
       return result.Id;
     } catch (error) {
-      Log.error(LOG_SOURCE, new Error(`Failed to get user ID for email: ${email}`));
+      Log.error(LOG_SOURCE, new Error('User ID retrieval error for email: ' + email));
       return null;
     }
   }

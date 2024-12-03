@@ -6,6 +6,8 @@ export interface IMisEventVersionProps {
   environmentMessage: string;
   hasTeamsContext: boolean;
   userDisplayName: string;
-  spHttpClient: SPHttpClient; // Add the type for spHttpClient
+  spHttpClient: SPHttpClient;
   siteUrl: string;
+  userId: number; 
 }
+

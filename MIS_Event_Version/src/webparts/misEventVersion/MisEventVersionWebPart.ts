@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDom from 'react-dom';
 import { Version } from '@microsoft/sp-core-library';
 import {
-  type IPropertyPaneConfiguration,
+  IPropertyPaneConfiguration,
   PropertyPaneTextField
 } from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
@@ -30,8 +30,9 @@ export default class MisEventVersionWebPart extends BaseClientSideWebPart<IMisEv
         environmentMessage: this._environmentMessage,
         hasTeamsContext: !!this.context.sdks.microsoftTeams,
         userDisplayName: this.context.pageContext.user.displayName,
-        spHttpClient: this.context.spHttpClient,
-        siteUrl: this.context.pageContext.web.absoluteUrl // Pass the current site URL
+        spHttpClient: this.context.spHttpClient, // Ensure this is imported and correctly typed
+        siteUrl: this.context.pageContext.web.absoluteUrl,
+        userId: this.context.pageContext.legacyPageContext.userId
       }
     );
 

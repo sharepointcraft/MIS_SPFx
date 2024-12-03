@@ -67,27 +67,45 @@ button:hover {
   margin: 10px 0; /* Spacing for error message */
 }
 
-.versionTable {
+.tablecontainer {
   width: 100%;
-  border-collapse: collapse; /* Collapses borders for better aesthetics */
+  overflow-x: auto;
   margin-top: 20px;
 }
+.versionhistorytable {
+  width: 100%;
+  min-width: 1200px;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-family: Arial, sans-serif;
+}
 
-.versionTable th,
-.versionTable td {
-  border: 1px solid #ccc; /* Cell border */
+.versionhistorytable th,
+.versionhistorytable td {
   padding: 10px;
   text-align: left;
+  border: 1px solid #ddd;
 }
 
-.versionTable th {
-  background-color: #f5f5f5; /* Header background color */
+.versionhistorytable th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+  color: #333;
 }
 
-.versionTable tr:nth-child(even) {
-  background-color: #f9f9f9; /* Zebra striping for table rows */
+.versionhistorytable tr:nth-child(even) {
+  background-color: #f9f9f9;
 }
 
-.versionTable tr:hover {
-  background-color: #f1f1f1; /* Highlight row on hover */
+.versionhistorytable tr:hover {
+  background-color: #f1f1f1;
+}
+
+.versionhistorytable a {
+  color: #0078d4;
+  text-decoration: none;
+}
+
+.versionhistorytable a:hover {
+  text-decoration: underline;
 }
